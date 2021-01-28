@@ -1,0 +1,10 @@
+com\changgou\user\pojo\Areas.class
+com\changgou\user\pojo\ItemsCollect.class
+com\changgou\user\pojo\User.class
+com\changgou\user\pojo\Cities.class
+com\changgou\user\pojo\OauthClientDetails.class
+com\changgou\user\pojo\ItemsHistory.class
+com\changgou\user\pojo\Provinces.class
+com\changgou\user\pojo\Address.class
+com\changgou\user\pojo\Comments.class
+com\changgou\user\pojo\UndoLog.class
