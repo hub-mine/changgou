@@ -1,0 +1,6 @@
+com\changgou\SearchApplication.class
+com\changgou\search\dao\SearchDao.class
+com\changgou\search\service\SearchService.class
+com\changgou\search\controller\SearchController.class
+com\changgou\search\service\impl\SearchServiceImpl.class
+com\changgou\search\service\impl\SearchServiceImpl$1.class
