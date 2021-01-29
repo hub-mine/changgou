@@ -20,11 +20,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
+<<<<<<< HEAD
         <!--oauth依赖-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-oauth2</artifactId>
         </dependency>
+=======
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
     </dependencies>
 
 </project>

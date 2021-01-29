@@ -1,9 +1,13 @@
 package com.changgou.seckill.impl;
 
 import com.alibaba.fastjson.JSONObject;
+<<<<<<< HEAD
 import com.changgou.seckill.dao.SeckillGoodsMapper;
 import com.changgou.seckill.dao.SeckillOrderMapper;
 import com.changgou.seckill.pojo.SeckillGoods;
+=======
+import com.changgou.seckill.dao.SeckillOrderMapper;
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
 import com.changgou.seckill.pojo.SeckillOrder;
 import com.changgou.seckill.pojo.SeckillStatus;
 import com.changgou.seckill.service.SeckillOrderService;
@@ -39,6 +43,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+<<<<<<< HEAD
     @Autowired
     private SeckillGoodsMapper seckillGoodsMapper;
     /**
@@ -114,6 +119,8 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
 
     }
 
+=======
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
     /**
      * 秒杀下单
      * @param userName
@@ -126,7 +133,11 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
         /**
          * 处理排队重复问题
          */
+<<<<<<< HEAD
         Long increment = stringRedisTemplate.boundValueOps("UserQueueCount_" + userName).increment(1);
+=======
+        Long increment = redisTemplate.boundValueOps("UserQueueCount_" + userName).increment(1);
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
         if(increment>1){
             throw new RuntimeException("正在排队");
         }
@@ -136,7 +147,11 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
         seckillStatus.setTime(time);
         seckillStatus.setStatus(1);
         //排队状态存入redis中
+<<<<<<< HEAD
         stringRedisTemplate.boundValueOps("SeckillStatus_" + userName).set(JSONObject.toJSONString(seckillStatus));
+=======
+        stringRedisTemplate.boundValueOps("SeckillStatus_" + userName+id).set(JSONObject.toJSONString(seckillStatus));
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
         //发送队列实现下单，同时更新排队状态和减库存等操作
         rabbitTemplate.convertAndSend("seckill_exchange","seckill.goods", JSONObject.toJSONString(seckillStatus));
         return seckillStatus;

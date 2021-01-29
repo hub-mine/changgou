@@ -5,7 +5,10 @@ import com.changgou.seckill.pojo.SeckillGoods;
 import com.changgou.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+<<<<<<< HEAD
 import org.springframework.data.redis.core.StringRedisTemplate;
+=======
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import tk.mybatis.mapper.entity.Example;
@@ -23,8 +26,11 @@ public class SeckillGoodsTask {
     private RedisTemplate redisTemplate;
     @Autowired
     private SeckillGoodsMapper seckillGoodsMapper;
+<<<<<<< HEAD
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+=======
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
     @Scheduled(cron =" 5 * * * * *")
     public void pullGoods(){
        // System.out.println(System.currentTimeMillis()+"秒杀任务");测试代码
@@ -46,8 +52,13 @@ public class SeckillGoodsTask {
             //开始时间+2小时大于活动结束时间
             criteria.andLessThanOrEqualTo("endTime",endTime);
             //排除已经缓存到秒杀的缓存商品数据
+<<<<<<< HEAD
             String time = DateUtil.data2str(dateMenu,DateUtil.PATTERN_YYYYMMDDHH);
             Set keys = redisTemplate.boundHashOps("SeckillGoods_" + time).keys();
+=======
+            String s = DateUtil.data2str(dateMenu,DateUtil.PATTERN_YYYYMMDDHH);
+            Set keys = redisTemplate.boundHashOps("SeckillGoods_" + s).keys();
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
             if(keys!=null&&keys.size()>0){
                 for (Object key : keys) {
                     criteria.andNotIn("id",keys);
@@ -57,16 +68,21 @@ public class SeckillGoodsTask {
             List<SeckillGoods> seckillGoods = seckillGoodsMapper.selectByExample(example);
             if(seckillGoods!=null&&seckillGoods.size()>0){
                 for (SeckillGoods seckillGood : seckillGoods) {
+<<<<<<< HEAD
                     redisTemplate.boundHashOps("SeckillGoods_" + time).put(seckillGood.getId(),seckillGood);
                     //处理超卖问题，将库存放入redis中，关联下单进行减库存
                     //引用redis的list数据类型特性
                     String[] ids=getIds(seckillGood);
                     stringRedisTemplate.boundListOps("SeckillGoodsQueue_"+seckillGood.getId()).leftPushAll(ids);
                     stringRedisTemplate.boundHashOps("SeckillStockCount").increment(seckillGood.getId(),seckillGood.getStockCount());
+=======
+                    redisTemplate.boundHashOps("SeckillGoods_" + s).put(seckillGood.getId(),seckillGood);
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
                 }
             }
         }
     }
+<<<<<<< HEAD
 
     /**
      * 创建秒杀商品的id集合
@@ -80,4 +96,6 @@ public class SeckillGoodsTask {
         }
         return ids;
     }
+=======
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
 }

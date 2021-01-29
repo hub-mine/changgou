@@ -12,6 +12,7 @@ import java.util.List;
  *****/
 public interface SeckillOrderService {
     /**
+<<<<<<< HEAD
      * 定义支付失败以及订单超时的库存回滚方法
      * @param orderId
      * @param time
@@ -32,6 +33,8 @@ public interface SeckillOrderService {
      */
     void deleteSeckillOrder(String username,String orderId);
     /**
+=======
+>>>>>>> 7b205edc9e439a46f42fe64cf86df176e02ff97e
      * 秒杀下单
      * @param userName
      * @param id
