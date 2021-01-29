@@ -5,11 +5,11 @@ import java.util.Map;
 public interface PayService {
     /**
      * 生成二维码连接
-     * @param orderId
-     * @param money
+     * @param data
+
      * @return
      */
-    String createCode(String orderId,Integer money);
+    String createCode(Map<String,Object>data);
 
     /**
      * 从微信查询订单信息

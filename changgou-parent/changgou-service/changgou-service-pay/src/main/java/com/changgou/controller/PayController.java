@@ -30,8 +30,8 @@ public class PayController {
      * 获取支付二维码连接
      */
     @RequestMapping("/create/native")
-    public Result create(String orderId,Integer money){
-        String code = payService.createCode(orderId, money);
+    public Result create(@RequestParam Map<String,Object>data){
+        String code = payService.createCode(data);
         return new Result(true, StatusCode.OK,"生成地址",code);
     }
     @RequestMapping("/check")
@@ -55,8 +55,13 @@ public class PayController {
             byte[] bytes = io.toByteArray();
             String s = new String(bytes, "UTF-8");
             Map<String, String> result = WXPayUtil.xmlToMap(s);  //微信返回结果
+            //获取交换机和路由key
+            String attach = result.get("attach");
+            Map parseObject = JSONObject.parseObject(attach, Map.class);
+            String exchange = parseObject.get("exchange").toString();
+            String routingKey = parseObject.get("routingKey").toString();
             //将结果内容发送到消息队列中
-            rabbitTemplate.convertAndSend("order_exchange","pay.#", JSONObject.toJSONString(result));
+            rabbitTemplate.convertAndSend(exchange,routingKey, JSONObject.toJSONString(result));
             io.close();
             inputStream.close();
             //定义返回微信的结果

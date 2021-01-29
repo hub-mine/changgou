@@ -12,6 +12,26 @@ import java.util.List;
  *****/
 public interface SeckillOrderService {
     /**
+     * 定义支付失败以及订单超时的库存回滚方法
+     * @param orderId
+     * @param time
+     */
+    void rollbackSeckillGoodsStockNum(String orderId, String time);
+    /**
+     * 通过监听支付结果进行订单修改
+     * @param username
+     * @param orderId
+     * @param transaction_id
+     */
+    void updateSeckillOrder(String username,String orderId,String transaction_id);
+
+    /**
+     * 通过监听支付结果进行订单删除
+     * @param username
+     * @param orderId
+     */
+    void deleteSeckillOrder(String username,String orderId);
+    /**
      * 秒杀下单
      * @param userName
      * @param id

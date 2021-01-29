@@ -1,7 +1,9 @@
 package com.changgou.seckill.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.changgou.seckill.dao.SeckillGoodsMapper;
 import com.changgou.seckill.dao.SeckillOrderMapper;
+import com.changgou.seckill.pojo.SeckillGoods;
 import com.changgou.seckill.pojo.SeckillOrder;
 import com.changgou.seckill.pojo.SeckillStatus;
 import com.changgou.seckill.service.SeckillOrderService;
@@ -37,6 +39,81 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
     private RabbitTemplate rabbitTemplate;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private SeckillGoodsMapper seckillGoodsMapper;
+    /**
+     * 通过监听支付结果进行订单修改
+     * @param username
+     * @param orderId
+     * @param transaction_id
+     */
+    @Override
+    public void updateSeckillOrder(String username, String orderId, String transaction_id) {
+        String order = stringRedisTemplate.boundHashOps("SeckillOrder" + orderId).get(username).toString();
+        SeckillOrder seckillOrder = JSONObject.parseObject(order, SeckillOrder.class);
+        if(seckillOrder.getStatus().equalsIgnoreCase("0")){
+            seckillOrder.setStatus("1");
+            seckillOrder.setTransactionId(transaction_id);
+            seckillOrder.setPayTime(new Date());
+            //更新数据到数据库中
+            seckillOrderMapper.updateByPrimaryKeySelective(seckillOrder);
+            //更新redis中订单数据
+            stringRedisTemplate.boundHashOps("SeckillOrder" + orderId).put(username,JSONObject.toJSONString(seckillOrder));
+            //移除排队信息
+            stringRedisTemplate.delete("SeckillStatus_" + username);
+            stringRedisTemplate.delete("UserQueueCount_" + username);
+        }
+    }
+    /**
+     * 通过监听支付结果进行订单删除
+     * @param username
+     * @param orderId
+     */
+    @Override
+    public void deleteSeckillOrder(String username, String orderId) {
+        String order = stringRedisTemplate.boundHashOps("SeckillOrder" + orderId).get(username).toString();
+        SeckillOrder seckillOrder = JSONObject.parseObject(order, SeckillOrder.class);
+        String s = stringRedisTemplate.boundValueOps("SeckillStatus_" + seckillOrder.getUserId()).get();
+        SeckillStatus seckillStatus = JSONObject.parseObject(s, SeckillStatus.class);
+        if(seckillOrder.getStatus().equalsIgnoreCase("0")){
+            seckillOrder.setStatus("2");
+            //更新数据到数据库中
+            seckillOrderMapper.updateByPrimaryKeySelective(seckillOrder);
+            //更新redis中订单数据
+            stringRedisTemplate.boundHashOps("SeckillOrder" + orderId).put(username,JSONObject.toJSONString(seckillOrder));
+            //移除排队信息
+            stringRedisTemplate.delete("SeckillStatus_" + username);
+            stringRedisTemplate.delete("UserQueueCount_" + username);
+        }
+        rollbackSeckillGoodsStockNum(seckillOrder.getSeckillId(),seckillStatus.getTime());
+    }
+
+    /**
+     * 定义支付失败以及订单超时的库存回滚方法
+     * @param orderId
+     * @param time
+     */
+    public void rollbackSeckillGoodsStockNum(String orderId, String time) {
+        SeckillOrder seckillOrder = seckillOrderMapper.selectByPrimaryKey(orderId);
+        String seckillId = seckillOrder.getSeckillId();
+        SeckillGoods seckillGoods = (SeckillGoods)redisTemplate.boundHashOps("SeckillGoods_" + time).get(seckillId);
+        //redis中商品库存找到
+        if(seckillGoods!=null&&StringUtils.isEmpty(seckillGoods.getId())){
+            //redis库存加1
+            stringRedisTemplate.boundListOps("SeckillGoodsQueue_"+seckillGoods.getId()).leftPush(seckillId);//商品队列放回数据
+            Long seckillStockCount = stringRedisTemplate.boundHashOps("SeckillStockCount").increment(seckillId, 1);
+            seckillGoods.setStockCount(seckillStockCount.intValue());
+            redisTemplate.boundHashOps("SeckillGoods_" + time).put(seckillId,seckillGoods);
+            //redis中商品售罄，直接更新数据库信息
+        }else{
+            SeckillGoods seckillGoods1 = seckillGoodsMapper.selectByPrimaryKey(seckillId);
+            seckillGoods1.setStockCount(seckillGoods1.getStockCount()+1);
+            seckillGoodsMapper.updateByPrimaryKeySelective(seckillGoods1);
+        }
+
+
+    }
+
     /**
      * 秒杀下单
      * @param userName
@@ -49,7 +126,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
         /**
          * 处理排队重复问题
          */
-        Long increment = redisTemplate.boundValueOps("UserQueueCount_" + userName).increment(1);
+        Long increment = stringRedisTemplate.boundValueOps("UserQueueCount_" + userName).increment(1);
         if(increment>1){
             throw new RuntimeException("正在排队");
         }
@@ -59,7 +136,7 @@ public class SeckillOrderServiceImpl implements SeckillOrderService {
         seckillStatus.setTime(time);
         seckillStatus.setStatus(1);
         //排队状态存入redis中
-        stringRedisTemplate.boundValueOps("SeckillStatus_" + userName+id).set(JSONObject.toJSONString(seckillStatus));
+        stringRedisTemplate.boundValueOps("SeckillStatus_" + userName).set(JSONObject.toJSONString(seckillStatus));
         //发送队列实现下单，同时更新排队状态和减库存等操作
         rabbitTemplate.convertAndSend("seckill_exchange","seckill.goods", JSONObject.toJSONString(seckillStatus));
         return seckillStatus;
