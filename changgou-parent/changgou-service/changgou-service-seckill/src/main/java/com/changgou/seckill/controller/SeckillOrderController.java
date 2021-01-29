@@ -3,6 +3,7 @@ package com.changgou.seckill.controller;
 import com.changgou.seckill.pojo.SeckillOrder;
 import com.changgou.seckill.pojo.SeckillStatus;
 import com.changgou.seckill.service.SeckillOrderService;
+import com.changgou.seckill.util.TokenDecode;
 import com.changgou.util.Result;
 import com.changgou.util.StatusCode;
 import com.github.pagehelper.PageInfo;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /****
  * @Author:itheima
@@ -32,8 +34,10 @@ public class SeckillOrderController {
  */
 @GetMapping("/add")
 public Result<SeckillStatus> add( String id, String time) {
-    String userName = "zhangsan";
-    SeckillStatus add = seckillOrderService.add(userName, id, time);
+    //调用OrderService实现添加Order
+    Map<String, String> userInfo = TokenDecode.getUserInfo();  //令牌中获取用户名
+    String username = userInfo.get("username");
+    SeckillStatus add = seckillOrderService.add(username, id, time);
     return new Result<SeckillStatus>(true,StatusCode.OK,"正在排队",add);
 }
     /***

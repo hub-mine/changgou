@@ -34,6 +34,12 @@ public class PayController {
         String code = payService.createCode(data);
         return new Result(true, StatusCode.OK,"生成地址",code);
     }
+
+    /**
+     * 查询支付状态
+     * @param orderId
+     * @return
+     */
     @RequestMapping("/check")
     public Result check(String orderId){
         Map<String, String> map = payService.checkOrder(orderId);
